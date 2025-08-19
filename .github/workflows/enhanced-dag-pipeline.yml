@@ -1,0 +1,35 @@
+name: Enhanced Multi-Stage DAG Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      enable_security:
+        description: 'Enable security scanning'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  # This demonstrates how a CONSUMER ORGANIZATION would call the platform workflow
+  # In a real multi-org setup, this would be:
+  # uses: platform-org/platform-workflows/.github/workflows/standard-ci-cd.yml@main
+  call-platform-dag-pipeline:
+    name: "🏢 Consumer Org → Platform DAG"
+    uses: flynn-actions/platform-workflows/.github/workflows/standard-ci-cd.yml@main
+    with:
+      environment: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'production' || 'staging') }}
+      node_version: '18'
+      run_tests: true
+      enable_security_scan: ${{ github.event.inputs.enable_security || true }}
